@@ -13,15 +13,15 @@ sql = db.cursor()
 db.commit()
 
 
-def kan_check(day, gr):
+def kan_check(gr):
     sql.execute(f"SELECT link FROM groups_link WHERE group_number = '{gr}'")
     link = sql.fetchone()[0]
     db.commit()
     html = requests.get(link).text
     soup = BeautifulSoup(html, 'lxml')
 
-    table_on_week_bs = soup.find_all(
-        class_='table table-bordered table-condensed visible-xs visible-sm table-lessons noprint odd')
+    table_on_week_bs = soup.find_all('table',
+        class_='table table-bordered table-condensed visible-xs visible-sm table-lessons noprint even')
     if not table_on_week_bs:
         return True
     else:
@@ -50,9 +50,9 @@ def get_table(day, gr):
     elif day == 5:
         week_day = 'Saturday'
 
-    table_on_week_bs = soup.find_all(
-        class_='table table-bordered table-condensed visible-xs visible-sm table-lessons noprint odd')
-    if kan_check(day, gr):
+    table_on_week_bs = soup.find_all('table',
+        class_='table table-bordered table-condensed visible-xs visible-sm table-lessons noprint even')
+    if kan_check(gr):
 
         table = (
             str('Каникулы!'), str('Каникулы!'), str('Каникулы!'), str('Каникулы!'), str('Каникулы!'), str(week_day),
@@ -111,7 +111,7 @@ def insert():
     query = "INSERT INTO schedule VALUES(?, ?, ?, ?, ?, ?, ?)"
     for group in groups:
         for day in range(6):
-            if not kan_check(day, group):
+            if not kan_check(group):
                 sql.executemany(query, get_table(day, group))
             else:
                 sql.execute(query, get_table(day, group))
